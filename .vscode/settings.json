@@ -1,0 +1,10 @@
+{
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+
+    "editor.formatOnSave": true,
+    "files.associations": {
+        "*.ino": "cpp",
+        "rope": "cpp",
+        "ostream": "cpp"
+    }
+}
