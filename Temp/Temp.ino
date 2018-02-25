@@ -1,21 +1,38 @@
+#include <String.h>
 // #include <Wire.h> // Comes with Arduino IDE
 // Get the LCD I2C Library here:
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads
 // Move any other LCD libraries to another folder or delete them
 // See Library "Docs" folder for possible commands etc.
-#include "LiquidCrystal_I2C.h"
+#include <LiquidCrystal_I2C.h>
+
+enum directions
+{
+  forward,
+  neutral,
+  reverse
+};
 
 // Set the pins on the I2C chip used for LCD connections:
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Set the LCD I2C address
 
+int enableSwitchPosition = 5;
+int forwardSwitchPosition = 6;
+int reverseSwitchPosition = 7;
+
+int PULLED_DOWN = 0;
+
+directions direction = neutral;
+bool enabled = false;
+
 void setup()
 {
-  pinMode(8, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
+  pinMode(enableSwitchPosition, INPUT_PULLUP);
+  pinMode(forwardSwitchPosition, INPUT_PULLUP);
+  pinMode(reverseSwitchPosition, INPUT_PULLUP);
 
-  Serial.begin(9600);
-  Serial.print("123");
+  Serial.begin(115200);
 
   lcd.begin(16, 2); // initialize the lcd for 16 chars 2 lines, turn on backlight
 
@@ -29,25 +46,47 @@ void setup()
 
 void loop()
 {
-  delay(400);
-  // lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.write("Top Row         ");
-  lcd.setCursor(0, 1);
-  lcd.write("Bottom Row      ");
-  // delay(100);
-
-  if (digitalRead(8) == 0)
+  if (digitalRead(forwardSwitchPosition) == PULLED_DOWN)
   {
-    Serial.println("forward");
+    direction = forward;
+    lcd.setCursor(0, 0);
+    lcd.write("Forward        ");
   }
-  else if (digitalRead(9) == 0)
+  else if (digitalRead(reverseSwitchPosition) == PULLED_DOWN)
   {
-    Serial.println("backward");
+    direction = reverse;
+    lcd.setCursor(0, 0);
+    lcd.write("Reverse         ");
   }
   else
   {
-    Serial.println("neutral");
+    direction = neutral;
+    lcd.setCursor(0, 0);
+    lcd.write("Neutral         ");
   }
-  delay (1);
+
+  enabled = digitalRead(enableSwitchPosition) == PULLED_DOWN;
+  if (enabled)
+  {
+    lcd.setCursor(0, 1);
+    lcd.write("Enabled         ");
+  }
+  else
+  {
+    lcd.setCursor(0, 1);
+    lcd.write("Disabled        ");
+  }
+
+  delay(1);
+}
+
+// int writeToLCD(char* message, int row)
+// {
+//   lcd.setCursor(0, 0);
+//   lcd.write(message);
+// }
+
+bool isPulledDown(int reading)
+{
+  return reading == PULLED_DOWN;
 }
