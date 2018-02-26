@@ -17,9 +17,12 @@ enum directions
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Set the LCD I2C address
 
-int enableSwitchPosition = 5;
-int forwardSwitchPosition = 6;
-int reverseSwitchPosition = 7;
+int percentageSettingPin = A0;
+int enableSwitchPin = 5;
+int forwardSwitchPin = 6;
+int reverseSwitchPin = 7;
+int sensorValue = 0;
+int percent = 0;
 
 int PULLED_DOWN = 0;
 
@@ -28,63 +31,50 @@ bool enabled = false;
 
 void setup()
 {
-  pinMode(enableSwitchPosition, INPUT_PULLUP);
-  pinMode(forwardSwitchPosition, INPUT_PULLUP);
-  pinMode(reverseSwitchPosition, INPUT_PULLUP);
+  pinMode(enableSwitchPin, INPUT_PULLUP);
+  pinMode(forwardSwitchPin, INPUT_PULLUP);
+  pinMode(reverseSwitchPin, INPUT_PULLUP);
+  pinMode(percentageSettingPin, INPUT);
 
   Serial.begin(115200);
 
   lcd.begin(16, 2); // initialize the lcd for 16 chars 2 lines, turn on backlight
-
   lcd.clear();
-  lcd.setCursor(0, 0); //Start at character 0 on line 0
-  lcd.write("Bubba Suds");
-  lcd.setCursor(0, 1); //Start at character 0 on line 0
-  lcd.write("3238    3238");
-  delay(500);
 }
 
 void loop()
 {
-  if (digitalRead(forwardSwitchPosition) == PULLED_DOWN)
+  sensorValue = analogRead(percentageSettingPin);
+  percent = map(sensorValue, 3, 1020, 0, 100);
+  char percentageString[4];
+  itoa(percent, percentageString, 10);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  if (digitalRead(forwardSwitchPin) == PULLED_DOWN)
   {
     direction = forward;
-    lcd.setCursor(0, 0);
-    lcd.write("Forward        ");
+    lcd.write("Forward ");
   }
-  else if (digitalRead(reverseSwitchPosition) == PULLED_DOWN)
+  else if (digitalRead(reverseSwitchPin) == PULLED_DOWN)
   {
     direction = reverse;
-    lcd.setCursor(0, 0);
-    lcd.write("Reverse         ");
+    lcd.write("Reverse ");
   }
   else
   {
     direction = neutral;
-    lcd.setCursor(0, 0);
-    lcd.write("Neutral         ");
+    lcd.write("Neutral ");
   }
+  lcd.write(percentageString);
+  lcd.write("%");
 
-  enabled = digitalRead(enableSwitchPosition) == PULLED_DOWN;
-  if (enabled)
-  {
-    lcd.setCursor(0, 1);
-    lcd.write("Enabled         ");
-  }
-  else
-  {
-    lcd.setCursor(0, 1);
-    lcd.write("Disabled        ");
-  }
+  enabled = digitalRead(enableSwitchPin) == PULLED_DOWN;
+  lcd.setCursor(0, 1);
+  lcd.write(enabled ? "Enabled         " : "Disabled        ");
 
-  delay(1);
+  delay(200);
 }
-
-// int writeToLCD(char* message, int row)
-// {
-//   lcd.setCursor(0, 0);
-//   lcd.write(message);
-// }
 
 bool isPulledDown(int reading)
 {
